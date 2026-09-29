@@ -87,6 +87,16 @@ h2{font-size:17px;margin:0;font-weight:700;letter-spacing:-.01em;}
 .kpi .l b{color:var(--ink-soft);font-weight:600;}
 .kpi.hero{border-color:var(--coral-line);background:var(--coral-soft);}
 .kpi.hero .v{color:var(--coral);}
+.kpi.plan{border-color:var(--ink);}
+.kpi.plan .v{font-size:clamp(19px,2.4vw,24px);line-height:1.15;}
+.kpi.plan .price{font-size:14px;font-weight:700;color:var(--ink-soft);margin-top:4px;font-variant-numeric:tabular-nums;}
+.meter{height:6px;border-radius:3px;background:var(--surface-2);margin-top:9px;overflow:hidden;}
+.meter i{display:block;height:100%;background:var(--ink);border-radius:3px;}
+.ladder{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+.ladder span{font-size:12px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);color:var(--muted);background:var(--surface-2);font-variant-numeric:tabular-nums;}
+.ladder span b{display:block;color:var(--ink-soft);font-weight:700;font-size:12.5px;}
+.ladder span.on{border-color:var(--coral);background:var(--coral-soft);color:var(--ink-soft);}
+.ladder span.on b{color:var(--coral);}
 
 .split{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:2px;background:var(--paper);margin-top:10px;}
 .split i{display:block;height:100%;}
@@ -150,12 +160,18 @@ footer code{background:var(--surface);border:1px solid var(--line);padding:1px 5
         <div class="kpi"><div class="v" id="c-recv">—</div><div class="l"><span data-i18n="kRecv"></span><br><b data-i18n="kRecvSub"></b></div></div>
         <div class="kpi"><div class="v" id="c-rate">—</div><div class="l"><span data-i18n="kRate"></span><br><b id="c-rate-src"></b></div></div>
         <div class="kpi"><div class="v" id="c-adv">—</div><div class="l"><span data-i18n="kAdv"></span><br><b data-i18n="kAdvSub"></b></div></div>
+        <div class="kpi plan"><div class="v" id="c-plan">—</div><div class="price" id="c-plan-price"></div><div class="meter"><i id="c-plan-bar" style="width:0"></i></div><div class="l"><span data-i18n="kPlan"></span><br><b id="c-plan-use"></b></div></div>
       </div>
 
       <div class="panel">
         <div class="phead"><h2 data-i18n="billH"></h2><span class="note" data-i18n="billNoteC"></span></div>
         <div class="split" id="c-split"><i class="rep" style="width:50%"></i><i class="call" style="width:50%"></i></div>
         <div class="legend" id="c-legend"></div>
+      </div>
+
+      <div class="panel">
+        <div class="phead"><h2 data-i18n="planH"></h2><span class="note" data-i18n="planNote"></span></div>
+        <div class="ladder" id="c-ladder"></div>
       </div>
 
       <div class="panel">
@@ -189,6 +205,7 @@ footer code{background:var(--surface);border:1px solid var(--line);padding:1px 5
       <div class="kpi hero"><div class="v" id="x-credits">—</div><div class="l"><span data-i18n="kCredits"></span><br><b id="x-year"></b></div></div>
       <div class="kpi"><div class="v" id="x-recv-k">—</div><div class="l"><span data-i18n="xRecv"></span><br><b data-i18n="xRecvSub"></b></div></div>
       <div class="kpi"><div class="v" id="x-adv">—</div><div class="l"><span data-i18n="xAdv"></span><br><b data-i18n="kAdvSub"></b></div></div>
+      <div class="kpi plan"><div class="v" id="x-plan">—</div><div class="price" id="x-plan-price"></div><div class="meter"><i id="x-plan-bar" style="width:0"></i></div><div class="l"><span data-i18n="kPlan"></span><br><b id="x-plan-use"></b></div></div>
     </div>
 
     <div class="panel">
@@ -198,9 +215,14 @@ footer code{background:var(--surface);border:1px solid var(--line);padding:1px 5
     </div>
 
     <div class="panel">
+        <div class="phead"><h2 data-i18n="planH"></h2><span class="note" data-i18n="planNote"></span></div>
+        <div class="ladder" id="x-ladder"></div>
+      </div>
+
+    <div class="panel">
       <div class="phead"><h2 data-i18n="refH"></h2><span class="note" data-i18n="refNote"></span></div>
       <div class="scroll"><table>
-        <thead><tr><th>Seats</th><th data-i18n="thCompanies"></th><th data-i18n="thRecvMo"></th><th data-i18n="thRate"></th><th data-i18n="thRep"></th><th data-i18n="thCall"></th><th data-i18n="thCrMo"></th><th data-i18n="thCrYr"></th></tr></thead>
+        <thead><tr><th>Seats</th><th data-i18n="thCompanies"></th><th data-i18n="thRecvMo"></th><th data-i18n="thRate"></th><th data-i18n="thRep"></th><th data-i18n="thCall"></th><th data-i18n="thCrMo"></th><th data-i18n="thCrYr"></th><th data-i18n="thPlan"></th></tr></thead>
         <tbody id="x-table"></tbody>
       </table></div>
     </div>
@@ -228,7 +250,17 @@ footer code{background:var(--surface);border:1px solid var(--line);padding:1px 5
   const $ = id => document.getElementById(id);
 
   /** Internal credit model. Not exposed in the UI. */
-  const P = { report:1, min:5, cpm:3, contact:0.7, adopt:1 };
+  const P = { report:1, min:5, cpm:4, contact:0.7, adopt:1 };
+  /** Company Agents plans (P&P Sep 2026). cap = credits / month. XL 2–3 prices not published. */
+  const PLANS = [
+    { id:'free', name:'Free', price:0, cap:500 },
+    { id:'starter', name:'Starter', price:109, cap:1000 },
+    { id:'growth', name:'Growth', price:199, cap:2000 },
+    { id:'scale', name:'Scale', price:549, cap:5000 },
+    { id:'xl1', name:'XL Enterprise 1', price:999, cap:10000 },
+    { id:'xl23', name:'XL Enterprise 2–3', price:null, cap:null, capMax:100000 },
+    { id:'xl4', name:'XL Enterprise 4', price:7000, cap:100000 }
+  ];
 
   const I18N = {
     es: {
@@ -258,13 +290,17 @@ footer code{background:var(--surface);border:1px solid var(--line);padding:1px 5
       tierHint:(n,m,r)=>`${n} clientes en el tramo · mediana ${m} recibidas/mes · tasa ${r}`,
       xRecv:'Candidaturas / mes', xRecvSub:'cada una genera un reporte de IA', xAdv:'Salen del buzón / mes',
       refH:'Referencia del mercado por tramo', refNote:'medianas reales de clientes Factorial',
-      thCompanies:'Empresas', thRecvMo:'Recibidas / mes', thRate:'Tasa de paso', thCrMo:'Cr. / mes', thCrYr:'Cr. / año',
+      thCompanies:'Empresas', thRecvMo:'Recibidas / mes', thRate:'Tasa de paso', thCrMo:'Cr. / mes', thCrYr:'Cr. / año', thPlan:'Plan',
+      kPlan:'Plan que tiene que comprar', perMo:'/ mes', freeP:'Gratis', priceTbd:'precio a confirmar con Sales',
+      planUse:(c,cap,p)=>`${c} de ${cap} cr./mes · ${p} de uso`, planRange:'entre 10k y 100k cr./mes',
+      planOver:'Más de 100k cr./mes', planOverSub:'supera XL Enterprise 4 · plan a medida',
+      planH:'Plan de Company Agents', planNote:'el más pequeño que cubre el consumo estimado · precios sep 2026',
       tiers:{'1-10':'1–10 seats','11-50':'11–50 seats','51-200':'51–200 seats','201-500':'201–500 seats','501-1000':'501–1.000 seats','1000+':'1.000+ seats','none':'Sin dato de seats','all':'Todo el mercado'},
       months:['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'],
       callsH:'Llamadas de IA reales por empresa', callsNote:'desde el 6 ago 2026 · producción',
       callsSub:'Las llamadas del estimador son modeladas a partir de los candidatos que salen del buzón; no incluyen llamadas reales ni de test. Esta tabla muestra las llamadas de IA que sí se han hecho. Las <b>llamadas de test</b> son las del botón de prueba en los ajustes del job: llamadas web con un candidato ficticio, sin candidatura asociada. Las <b>llamadas a candidatos</b> son telefónicas y van ligadas a una candidatura real.',
       thCompany:'Empresa', thTestCalls:'Llamadas de test', thTestMin:'Min. test', thPhoneCalls:'Llamadas a candidatos', thCands:'Candidatos llamados', thCompleted:'Completadas', thPhoneMin:'Min. candidatos', thLastCall:'Última llamada',
-      footer:'<b>Metodología.</b> Fuente <code>aws_prod_data_glue_catalog</code> vía Trino, tablas <code>bronze.ats_applications</code> y <code>bronze.ats_application_phases</code> deduplicadas por CDC. <b>Recibidas</b>: candidaturas por mes de <code>created_at</code>, sep 2025 → 10 sep 2026. <b>Salen del buzón</b>: fase actual con <code>phase_type ≠ \'initial\'</code>. <b>Base mensual del cliente</b>: media de recibidas en jun–ago 2026. <b>Tasa de paso del cliente</b>: salieron / recibidas en sep 2025–may 2026 (meses maduros, para evitar el sesgo de recencia); si el cliente tiene menos de 30 candidaturas en ese periodo se usa la tasa agregada de su tramo. <b>Tramos</b>: seats del último mes disponible en <code>gold.customers_monthly</code>. Excluidas de las medianas las empresas 1, 324209 y 315537 (cargas masivas); la cuenta de pruebas 65466 está excluida de todo el dataset. <b>Llamadas reales</b>: <code>bronze.integrations_retell_calls</code> cruzada con <code>bronze.ats_ai_call_results</code>; test = <code>call_type = \'web_call\'</code>, candidatos = <code>phone_call</code>. Consumo calculado con el modelo interno de créditos de One. Generado 2026-09-10.'
+      footer:'<b>Metodología.</b> Fuente <code>aws_prod_data_glue_catalog</code> vía Trino, tablas <code>bronze.ats_applications</code> y <code>bronze.ats_application_phases</code> deduplicadas por CDC. <b>Recibidas</b>: candidaturas por mes de <code>created_at</code>, sep 2025 → 10 sep 2026. <b>Salen del buzón</b>: fase actual con <code>phase_type ≠ \'initial\'</code>. <b>Base mensual del cliente</b>: media de recibidas en jun–ago 2026. <b>Tasa de paso del cliente</b>: salieron / recibidas en sep 2025–may 2026 (meses maduros, para evitar el sesgo de recencia); si el cliente tiene menos de 30 candidaturas en ese periodo se usa la tasa agregada de su tramo. <b>Tramos</b>: seats del último mes disponible en <code>gold.customers_monthly</code>. Excluidas de las medianas las empresas 1, 324209 y 315537 (cargas masivas); la cuenta de pruebas 65466 está excluida de todo el dataset. <b>Llamadas reales</b>: <code>bronze.integrations_retell_calls</code> cruzada con <code>bronze.ats_ai_call_results</code>; test = <code>call_type = \'web_call\'</code>, candidatos = <code>phone_call</code>. Consumo calculado con el modelo interno de créditos de One (llamada: 4 créditos/min, duración estimada 5 min). <b>Plan</b>: el plan de Company Agents más pequeño cuya capacidad mensual cubre los créditos estimados (Free 500 · Starter €109 1k · Growth €199 2k · Scale €549 5k · XL Enterprise 1–4 de €999 10k a €7.000 100k; precios de XL 2–3 no publicados). Generado 2026-09-10.'
     },
     en: {
       locale:'en-US',
@@ -293,13 +329,17 @@ footer code{background:var(--surface);border:1px solid var(--line);padding:1px 5
       tierHint:(n,m,r)=>`${n} customers in the tier · median ${m} received/month · rate ${r}`,
       xRecv:'Applications / month', xRecvSub:'each generates an AI report', xAdv:'Leave the inbox / month',
       refH:'Market reference by tier', refNote:'real medians of Factorial customers',
-      thCompanies:'Companies', thRecvMo:'Received / month', thRate:'Advance rate', thCrMo:'Cr. / month', thCrYr:'Cr. / year',
+      thCompanies:'Companies', thRecvMo:'Received / month', thRate:'Advance rate', thCrMo:'Cr. / month', thCrYr:'Cr. / year', thPlan:'Plan',
+      kPlan:'Plan to buy', perMo:'/ month', freeP:'Free', priceTbd:'price to confirm with Sales',
+      planUse:(c,cap,p)=>`${c} of ${cap} cr./month · ${p} used`, planRange:'between 10k and 100k cr./month',
+      planOver:'Over 100k cr./month', planOverSub:'exceeds XL Enterprise 4 · custom plan',
+      planH:'Company Agents plan', planNote:'smallest plan that covers the estimated usage · Sep 2026 prices',
       tiers:{'1-10':'1–10 seats','11-50':'11–50 seats','51-200':'51–200 seats','201-500':'201–500 seats','501-1000':'501–1,000 seats','1000+':'1,000+ seats','none':'No seat data','all':'Whole market'},
       months:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
       callsH:'Real AI calls by company', callsNote:'since 6 Aug 2026 · production',
       callsSub:'The estimator\'s calls are modelled from candidates who leave the inbox; they include neither real nor test calls. This table shows the AI calls that actually happened. <b>Test calls</b> come from the test button in the job settings: web calls with a mock candidate and no application attached. <b>Candidate calls</b> are phone calls tied to a real application.',
       thCompany:'Company', thTestCalls:'Test calls', thTestMin:'Test min.', thPhoneCalls:'Candidate calls', thCands:'Candidates called', thCompleted:'Completed', thPhoneMin:'Candidate min.', thLastCall:'Last call',
-      footer:'<b>Methodology.</b> Source <code>aws_prod_data_glue_catalog</code> via Trino, tables <code>bronze.ats_applications</code> and <code>bronze.ats_application_phases</code>, CDC-deduplicated. <b>Received</b>: applications by month of <code>created_at</code>, Sep 2025 → 10 Sep 2026. <b>Left inbox</b>: current stage with <code>phase_type ≠ \'initial\'</code>. <b>Customer monthly base</b>: average applications received in Jun–Aug 2026. <b>Customer advance rate</b>: left inbox / received over Sep 2025–May 2026 (matured months, to avoid recency bias); customers with fewer than 30 applications in that window use their tier\'s pooled rate. <b>Tiers</b>: seats from the latest month available in <code>gold.customers_monthly</code>. Companies 1, 324209 and 315537 (bulk loads) are excluded from the medians; the test account 65466 is excluded from the whole dataset. <b>Real calls</b>: <code>bronze.integrations_retell_calls</code> joined with <code>bronze.ats_ai_call_results</code>; test = <code>call_type = \'web_call\'</code>, candidates = <code>phone_call</code>. Consumption computed with One\'s internal credit model. Generated 2026-09-10.'
+      footer:'<b>Methodology.</b> Source <code>aws_prod_data_glue_catalog</code> via Trino, tables <code>bronze.ats_applications</code> and <code>bronze.ats_application_phases</code>, CDC-deduplicated. <b>Received</b>: applications by month of <code>created_at</code>, Sep 2025 → 10 Sep 2026. <b>Left inbox</b>: current stage with <code>phase_type ≠ \'initial\'</code>. <b>Customer monthly base</b>: average applications received in Jun–Aug 2026. <b>Customer advance rate</b>: left inbox / received over Sep 2025–May 2026 (matured months, to avoid recency bias); customers with fewer than 30 applications in that window use their tier\'s pooled rate. <b>Tiers</b>: seats from the latest month available in <code>gold.customers_monthly</code>. Companies 1, 324209 and 315537 (bulk loads) are excluded from the medians; the test account 65466 is excluded from the whole dataset. <b>Real calls</b>: <code>bronze.integrations_retell_calls</code> joined with <code>bronze.ats_ai_call_results</code>; test = <code>call_type = \'web_call\'</code>, candidates = <code>phone_call</code>. Consumption computed with One\'s internal credit model (call: 4 credits/min, estimated 5-minute duration). <b>Plan</b>: the smallest Company Agents plan whose monthly capacity covers the estimated credits (Free 500 · Starter €109 1k · Growth €199 2k · Scale €549 5k · XL Enterprise 1–4 from €999 10k to €7,000 100k; XL 2–3 prices not published). Generated 2026-09-10.'
     }
   };
   let L = I18N.es, nf0, nf1;
@@ -332,6 +372,31 @@ footer code{background:var(--surface);border:1px solid var(--line);padding:1px 5
     const rep = P.adopt * recv * P.report;
     const call = P.adopt * recv * rate * P.contact * P.min * P.cpm;
     return { rep, call, total: rep + call };
+  }
+  function planFor(cr){
+    if (cr <= 10000) return PLANS.find(p => p.cap != null && cr <= p.cap);
+    if (cr < 100000) return PLANS.find(p => p.id === 'xl23');
+    if (cr <= 100000) return PLANS.find(p => p.id === 'xl4');
+    return null;
+  }
+  const eur = v => new Intl.NumberFormat(L.locale, {style:'currency', currency:'EUR', maximumFractionDigits:0}).format(v);
+  const planPrice = p => p.price === 0 ? L.freeP : p.price == null ? L.priceTbd : `${eur(p.price)} ${L.perMo}`;
+  const planShort = cr => { const p = planFor(cr); return !p ? L.planOver : p.id === 'xl23' ? 'XL Enterprise 2–4' : p.name; };
+  function renderPlan(x, cr){
+    const p = planFor(cr);
+    const range = p && p.id === 'xl23';
+    $(x+'-plan').textContent = !p ? L.planOver : range ? 'XL Enterprise 2–4' : p.name;
+    $(x+'-plan-price').textContent = p ? planPrice(p) : '';
+    let use, w;
+    if (!p){ use = L.planOverSub; w = 100; }
+    else if (p.cap == null){ use = L.planRange; w = (cr/p.capMax)*100; }
+    else { w = cr/p.cap*100; use = L.planUse(nf0.format(cr), nf0.format(p.cap), nf0.format(w)+'%'); }
+    $(x+'-plan-use').textContent = use;
+    $(x+'-plan-bar').style.width = Math.min(100, w) + '%';
+    $(x+'-ladder').innerHTML = PLANS.map(q => {
+      const cap = q.cap != null ? fmtK(q.cap)+' cr.' : '10k–100k cr.';
+      return `<span class="${p && (q.id===p.id || (range && q.id==='xl4')) ? 'on':''}"><b>${q.name}</b>${cap} · ${q.price===0?L.freeP:q.price==null?'—':eur(q.price)}</span>`;
+    }).join('');
   }
   function renderSplit(splitId, legendId, c){
     const s = $(splitId); const tot = c.total || 1;
@@ -381,6 +446,7 @@ footer code{background:var(--surface);border:1px solid var(--line);padding:1px 5
     $('c-rate-src').textContent = m.own ? L.rateOwn(nf0.format(m.ma), nf0.format(m.mr)) : L.rateTier(tierLabel(m.tier));
     $('c-adv').textContent = nf0.format(advMo);
     renderSplit('c-split','c-legend',cr);
+    renderPlan('c', cr.total);
 
     const series = M.map((mo,i) => ({ m:mo, recv:c[3][i], adv:c[4][i], ...credits(c[3][i], m.rate), partial: i === M.length-1 }));
     drawBars(series);
@@ -445,8 +511,9 @@ footer code{background:var(--surface);border:1px solid var(--line);padding:1px 5
     $('x-recv-k').textContent = nf0.format(recv);
     $('x-adv').textContent = nf0.format(recv*rate);
     renderSplit('x-split','x-legend',cr);
+    renderPlan('x', cr.total);
     $('x-table').innerHTML = TIER_ORDER.map(k => { const t = T[k]; const c = credits(t.medRecv, t.rate);
-      return `<tr class="${k===sel.value?'hl':''}"><td>${tierLabel(k)}</td><td>${nf0.format(t.n)}</td><td>${nf1.format(t.medRecv)}</td><td>${pct(t.rate)}</td><td>${nf0.format(c.rep)}</td><td>${nf0.format(c.call)}</td><td><b>${nf0.format(c.total)}</b></td><td>${nf0.format(c.total*12)}</td></tr>`; }).join('');
+      return `<tr class="${k===sel.value?'hl':''}"><td>${tierLabel(k)}</td><td>${nf0.format(t.n)}</td><td>${nf1.format(t.medRecv)}</td><td>${pct(t.rate)}</td><td>${nf0.format(c.rep)}</td><td>${nf0.format(c.call)}</td><td><b>${nf0.format(c.total)}</b></td><td>${nf0.format(c.total*12)}</td><td>${planShort(c.total)}</td></tr>`; }).join('');
   }
 
   /* ---------- Real calls ---------- */
@@ -475,6 +542,5 @@ footer code{background:var(--surface);border:1px solid var(--line);padding:1px 5
   setLang(I18N[lang] ? lang : 'es');
 })();
 </script>
-
 </body>
 </html>
