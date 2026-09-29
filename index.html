@@ -351,6 +351,7 @@ footer code{background:var(--surface);border:1px solid var(--line);padding:1px 5
     document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = L[el.dataset.i18n]; });
     document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = L[el.dataset.i18nHtml]; });
     document.documentElement.lang = L === I18N.es ? 'es' : 'en';
+    document.title = L.title;
     $('c-chart').setAttribute('aria-label', L.chartAria);
     $('c-count').textContent = L.count(nf0.format(D.companies.length));
     Array.from($('x-tier').options).forEach(o => { o.textContent = tierLabel(o.value); });
@@ -539,6 +540,7 @@ footer code{background:var(--surface);border:1px solid var(--line);padding:1px 5
   if (!$('c-id').value) $('c-id').value = '265105';
   const t51 = T['51-200']; $('x-recv').value = Math.round(t51.medRecv); $('x-rate').value = Math.round(t51.rate*100);
   let lang = 'es'; try { lang = localStorage.getItem('one-credits-lang') || 'es'; } catch(e){}
+  const urlLang = new URLSearchParams(location.search).get('lang'); if (I18N[urlLang]) lang = urlLang;
   setLang(I18N[lang] ? lang : 'es');
 })();
 </script>
